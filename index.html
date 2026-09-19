@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini OS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: #2c3e50;
+    }
+
+    /* Рабочий стол */
+    #desktop {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1920&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      z-index: 1;
+    }
+
+    /* Панель задач */
+    #taskbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      color: white;
+      z-index: 10;
+    }
+    #start-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    #running-apps {
+      display: flex;
+      gap: 5px;
+    }
+    .taskbar-app {
+      padding: 4px 8px;
+      background: rgba(255,255,255,.2);
+      cursor: pointer;
+    }
+
+    /* Меню Пуск */
+    #start-menu {
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      width: 240px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      padding: 10px;
+      display: none;
+      z-index: 20;
+    }
+    #start-menu.visible { display: block; }
+
+    .menu-section { margin-bottom: 12px; }
+    .menu-title { font-weight: bold; margin-bottom: 6px; }
+    button.menu-btn {
+      width: 100%;
+      padding: 6px;
+      text-align: left;
+      background: transparent;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+    button.menu-btn:hover { background: #f0f0f0; }
+
+    /* Иконки на рабочем столе */
+    .desktop-icon {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .icon-img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      margin-bottom: 4px;
+    }
+    .icon-label {
+      font-size: 11px;
+      text-align: center;
+      color: white;
+      text-shadow: 0 1px 2px black;
+    }
+
+    /* Окно приложения */
+    #app-window {
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      width: 320px;
+      height: 240px;
+      background: white;
+      border: 2px solid #333;
+      box-shadow: 0 4px 12px rgba(0,0,0,.4);
+      display: none;
+      z-index: 30;
+      resize: both;
+      overflow: auto;
+    }
+    #app-window.visible { display: block; }
+    .window-header {
+      background: #333;
+      color: white;
+      padding: 6px;
+      cursor: move;
+    }
+    .window-close {
+      float: right;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .window-body { padding: 10px; font-size: 13px; }
+
+    /* Модалка для установки/удаления */
+    #install-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 40;
+    }
+    #install-modal.visible { display: flex; }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 360px;
+      width: 90%;
+    }
+    input, select { width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <!-- Рабочий стол -->
+  <div id="desktop"></div>
+
+  <!-- Панель задач -->
+  <div id="taskbar">
+    <button id="start-btn">Пуск</button>
+    <div id="running-apps"></div>
+  </div>
+
+  <!-- Меню Пуск -->
+  <div id="start-menu">
+    <div class="menu-section">
+      <div class="menu-title">Фон рабочего стола</div>
+      <input type="file" id="bg-input" accept="image/*">
+    </div>
+    <div class="menu-section">
+      <div class="menu-title">Приложения</div>
+      <button class="menu-btn" onclick="openInstallModal()">Установить приложение</button>
+      <button class="menu-btn" onclick="showUninstallList()">Удалить приложение</button>
+    </div>
+  </div>
+
+  <!-- Окно приложения -->
+  <div id="app-window">
+    <div class="window-header">
+      Приложение — <span id="app-title">Box</span>
+      <span class="window-close" onclick="closeAppWindow()">×</span>
+    </div>
+    <div class="window-body" id="app-body">
+      Это приложение-коробка с открытым исходным кодом.
+      <br><br>
+      Внутри — лисёнок Firefox (SVG).
+    </div>
+  </div>
+
+  <!-- Модалка установки/удаления -->
+  <div id="install-modal">
+    <div class="modal-content">
+      <h3 id="modal-title">Установка приложения</h3>
+      <label>Название</label>
+      <input type="text" id="app-name" placeholder="Например: Box">
+      <label>Иконка (URL или base64)</label>
+      <input type="text" id="app-icon" placeholder="URL картинки">
+      <label>Действие при клике</label>
+      <select id="app-action">
+        <option value="alert">Показать сообщение</option>
+        <option value="open-window">Открыть окно</option>
+      </select>
+      <button onclick="installApp()" style="width:auto; padding:6px 12px;">Установить</button>
+      <button onclick="closeInstallModal()" style="margin-top:8px; width:auto;">Отмена</button>
+    </div>
+  </div>
+
+  <script>
+    const desktop = document.getElementById('desktop');
+    const startBtn = document.getElementById('start-btn');
+    const startMenu = document.getElementById('start-menu');
+    const bgInput = document.getElementById('bg-input');
+    const installModal = document.getElementById('install-modal');
+    const appWindow = document.getElementById('app-window');
+    const runningAppsContainer = document.getElementById('running-apps');
+
+    // Переключение меню Пуск
+    startBtn.addEventListener('click', () => {
+      startMenu.classList.toggle('visible');
+    });
+
+    // Смена фона
+    bgInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        desktop.style.backgroundImage = `url('${ev.target.result}')`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Иконки приложений на рабочем столе
+    const icons = [];
+
+    function createDesktopIcon(name, iconUrl, action) {
+      const el = document.createElement('div');
+      el.className = 'desktop-icon';
+      el.innerHTML = `
+        <img src="${iconUrl}" class="icon-img" alt="${name}">
+        <div class="icon-label">${name}</div>
+      `;
+      // Простое позиционирование: слева сверху, с отступом
+      let x = 20 + icons.length * 74;
+      let y = 20;
+      if (x > window.innerWidth - 80) {
+        x = 20;
+        y = 90 + icons.length * 74;
+      }
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.onclick = () => handleAppClick(name, action);
+      desktop.appendChild(el);
+      icons.push({ el, name, iconUrl, action });
+    }
+
+    // Обработчик клика по иконке
+    function handleAppClick(name, action) {
+      if (action === 'alert') {
+        alert(`Приложение "${name}" запущено!`);
+      } else if (action === 'open-window') {
+        document.getElementById('app-title').textContent = name;
+        appWindow.classList.add('visible');
+        // Добавляем лисёнка Firefox в окно, если это «Box»
+        if (name === 'Box') {
+          document.getElementById('app-body').innerHTML = `
+            <p>Приложение «Box» — открытый исходный код.</p>
+            <div style="text-align:center;">
+              ${getFirefoxFoxSVG()}
+            </div>
+          `;
+        } else {
+          document.getElementById('app-body').textContent = `Приложение "${name}".`;
+        }
+      }
+    }
+
+    // SVG лисёнка Firefox
+    function getFirefoxFoxSVG() {
+      return `
+        <svg width="120" height="120" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="100" fill="#FF9900"/>
