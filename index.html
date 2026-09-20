@@ -1,287 +1,1214 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mini OS</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      background-color: #2c3e50;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebOS 7</title>
 
-    /* Рабочий стол */
-    #desktop {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      background-image: url('https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1920&auto=format&fit=crop');
-      background-size: cover;
-      background-position: center;
-      z-index: 1;
-    }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-    /* Панель задач */
-    #taskbar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 40px;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      color: white;
-      z-index: 10;
-    }
-    #start-btn {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-    #running-apps {
-      display: flex;
-      gap: 5px;
-    }
-    .taskbar-app {
-      padding: 4px 8px;
-      background: rgba(255,255,255,.2);
-      cursor: pointer;
-    }
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: "Segoe UI", Arial, sans-serif;
+    user-select: none;
+}
 
-    /* Меню Пуск */
-    #start-menu {
-      position: absolute;
-      bottom: 50px;
-      left: 10px;
-      width: 240px;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
-      padding: 10px;
-      display: none;
-      z-index: 20;
-    }
-    #start-menu.visible { display: block; }
+body {
+    background-color: #075b99;
+    background-image:
+        linear-gradient(rgba(0, 55, 120, .15), rgba(0, 0, 0, .2)),
+        radial-gradient(circle at center, #18b9ed, #07518c 65%, #032b55);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
-    .menu-section { margin-bottom: 12px; }
-    .menu-title { font-weight: bold; margin-bottom: 6px; }
-    button.menu-btn {
-      width: 100%;
-      padding: 6px;
-      text-align: left;
-      background: transparent;
-      border: 1px solid #ddd;
-      cursor: pointer;
-      margin-bottom: 4px;
-    }
-    button.menu-btn:hover { background: #f0f0f0; }
+/* Рабочий стол */
 
-    /* Иконки на рабочем столе */
-    .desktop-icon {
-      position: absolute;
-      width: 64px;
-      height: 64px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
-    .icon-img {
-      width: 48px;
-      height: 48px;
-      object-fit: contain;
-      margin-bottom: 4px;
-    }
-    .icon-label {
-      font-size: 11px;
-      text-align: center;
-      color: white;
-      text-shadow: 0 1px 2px black;
-    }
+#desktop {
+    position: absolute;
+    inset: 0 0 43px 0;
+    padding: 10px;
+}
 
-    /* Окно приложения */
-    #app-window {
-      position: absolute;
-      top: 50px;
-      left: 50px;
-      width: 320px;
-      height: 240px;
-      background: white;
-      border: 2px solid #333;
-      box-shadow: 0 4px 12px rgba(0,0,0,.4);
-      display: none;
-      z-index: 30;
-      resize: both;
-      overflow: auto;
-    }
-    #app-window.visible { display: block; }
-    .window-header {
-      background: #333;
-      color: white;
-      padding: 6px;
-      cursor: move;
-    }
-    .window-close {
-      float: right;
-      cursor: pointer;
-      color: #aaa;
-    }
-    .window-body { padding: 10px; font-size: 13px; }
+.desktop-icon {
+    width: 90px;
+    min-height: 88px;
+    margin-bottom: 7px;
+    padding: 5px;
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    text-shadow: 1px 1px 3px #000;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-    /* Модалка для установки/удаления */
-    #install-modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,.6);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 40;
-    }
-    #install-modal.visible { display: flex; }
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 360px;
-      width: 90%;
-    }
-    input, select { width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 8px; }
-  </style>
+.desktop-icon:hover {
+    background: rgba(255, 255, 255, .2);
+    border-color: rgba(255, 255, 255, .55);
+}
+
+.desktop-icon .icon {
+    display: block;
+    height: 50px;
+    font-size: 42px;
+    line-height: 48px;
+}
+
+.desktop-icon .name {
+    display: block;
+    word-break: break-word;
+}
+
+/* Панель задач */
+
+#taskbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    padding: 3px 7px;
+    background: linear-gradient(#4389c2, #174d83);
+    border-top: 1px solid #a8ddff;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, .55);
+    z-index: 1000;
+}
+
+#start-button {
+    width: 92px;
+    height: 35px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    border: 1px solid #b7e3ff;
+    border-radius: 19px;
+    background: linear-gradient(#77d35e, #27772f);
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.7),
+        0 1px 4px #111;
+    cursor: pointer;
+}
+
+#start-button:hover {
+    filter: brightness(1.15);
+}
+
+#task-buttons {
+    display: flex;
+    flex: 1;
+    gap: 5px;
+    height: 35px;
+    margin-left: 8px;
+}
+
+.task-button {
+    width: 145px;
+    height: 32px;
+    overflow: hidden;
+    padding: 0 10px;
+    color: white;
+    white-space: nowrap;
+    text-align: left;
+    text-overflow: ellipsis;
+    border: 1px solid #a8d3f3;
+    border-radius: 3px;
+    background: linear-gradient(#63a4d5, #28689f);
+    cursor: pointer;
+}
+
+.task-button.active {
+    background: linear-gradient(#285d91, #153b67);
+}
+
+#clock {
+    width: 75px;
+    color: white;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Меню Пуск */
+
+#start-menu {
+    position: absolute;
+    left: 7px;
+    bottom: 43px;
+    z-index: 3000;
+    display: none;
+    width: 345px;
+    padding: 8px;
+    color: #222;
+    border: 1px solid #477da9;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(90deg, #f5faff, #d2e8f9);
+    box-shadow: 0 0 17px rgba(0,0,0,.75);
+}
+
+#start-menu.visible {
+    display: block;
+}
+
+.start-title {
+    margin-bottom: 8px;
+    padding: 10px;
+    color: white;
+    font-size: 19px;
+    font-weight: bold;
+    border-radius: 5px;
+    background: linear-gradient(#438fce, #1e568f);
+}
+
+.start-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.start-item:hover {
+    background: #b9d9f2;
+}
+
+.start-item .big-icon {
+    width: 32px;
+    font-size: 27px;
+    text-align: center;
+}
+
+/* Окна */
+
+.window {
+    position: absolute;
+    top: 75px;
+    left: 150px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    width: 720px;
+    height: 480px;
+    min-width: 360px;
+    min-height: 230px;
+    overflow: hidden;
+    border: 1px solid #154d80;
+    border-radius: 7px 7px 2px 2px;
+    background: #eaf4fb;
+    box-shadow: 0 8px 26px rgba(0,0,0,.65);
+}
+
+.window.maximized {
+    inset: 5px 5px 43px 5px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.window-header {
+    display: flex;
+    align-items: center;
+    height: 35px;
+    padding: 0 7px 0 12px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    background: linear-gradient(#69afe8, #1e5f99);
+    border-bottom: 1px solid #164673;
+    cursor: move;
+}
+
+.window-title {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.window-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.window-controls button {
+    width: 25px;
+    height: 23px;
+    padding: 0;
+    color: white;
+    border: 1px solid rgba(255,255,255,.75);
+    border-radius: 3px;
+    background: rgba(0,0,0,.18);
+    cursor: pointer;
+}
+
+.window-controls button:hover {
+    background: #b82f2f;
+}
+
+.window-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Панель инструментов */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px;
+    background: #d7eaf8;
+    border-bottom: 1px solid #aac9df;
+}
+
+.toolbar button,
+.file-actions button {
+    padding: 6px 10px;
+    border: 1px solid #7da7c2;
+    border-radius: 3px;
+    background: linear-gradient(#fff, #c8dfef);
+    cursor: pointer;
+}
+
+.toolbar button:hover,
+.file-actions button:hover {
+    background: #b8dcf5;
+}
+
+/* Файлы */
+
+.file-list {
+    flex: 1;
+    overflow: auto;
+    padding: 8px;
+    background: white;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e3e3e3;
+    cursor: pointer;
+}
+
+.file-row:hover,
+.file-row.selected {
+    background: #d9ecfb;
+}
+
+.file-icon {
+    font-size: 29px;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: bold;
+}
+
+.file-type {
+    color: #777;
+    font-size: 11px;
+}
+
+.file-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.empty {
+    padding: 40px 10px;
+    color: #777;
+    text-align: center;
+}
+
+.statusbar {
+    padding: 5px 9px;
+    color: #555;
+    font-size: 11px;
+    background: #e5eef5;
+    border-top: 1px solid #b4c8d8;
+}
+
+/* HTML-редактор */
+
+.editor {
+    flex: 1;
+    width: 100%;
+    padding: 12px;
+    resize: none;
+    outline: none;
+    border: 0;
+    font: 13px Consolas, monospace;
+}
+
+.editor-toolbar {
+    display: flex;
+    gap: 7px;
+    padding: 8px;
+    background: #d7eaf8;
+    border-bottom: 1px solid #aac9df;
+}
+
+.editor-toolbar button {
+    padding: 6px 11px;
+    border: 1px solid #7da7c2;
+    border-radius: 3px;
+    background: linear-gradient(#fff, #c8dfef);
+    cursor: pointer;
+}
+
+/* Предпросмотр HTML */
+
+.preview {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background: white;
+}
+
+/* Контекстное меню */
+
+.context-menu {
+    position: absolute;
+    z-index: 5000;
+    display: none;
+    width: 175px;
+    padding: 4px;
+    color: #222;
+    border: 1px solid #777;
+    background: white;
+    box-shadow: 2px 2px 8px #222;
+}
+
+.context-menu button {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    background: white;
+    text-align: left;
+    cursor: pointer;
+}
+
+.context-menu button:hover {
+    background: #dceefe;
+}
+</style>
 </head>
+
 <body>
-  <!-- Рабочий стол -->
-  <div id="desktop"></div>
 
-  <!-- Панель задач -->
-  <div id="taskbar">
-    <button id="start-btn">Пуск</button>
-    <div id="running-apps"></div>
-  </div>
+<div id="desktop"></div>
 
-  <!-- Меню Пуск -->
-  <div id="start-menu">
-    <div class="menu-section">
-      <div class="menu-title">Фон рабочего стола</div>
-      <input type="file" id="bg-input" accept="image/*">
-    </div>
-    <div class="menu-section">
-      <div class="menu-title">Приложения</div>
-      <button class="menu-btn" onclick="openInstallModal()">Установить приложение</button>
-      <button class="menu-btn" onclick="showUninstallList()">Удалить приложение</button>
-    </div>
-  </div>
+<div id="taskbar">
+    <button id="start-button">● Пуск</button>
+    <div id="task-buttons"></div>
+    <div id="clock"></div>
+</div>
 
-  <!-- Окно приложения -->
-  <div id="app-window">
-    <div class="window-header">
-      Приложение — <span id="app-title">Box</span>
-      <span class="window-close" onclick="closeAppWindow()">×</span>
-    </div>
-    <div class="window-body" id="app-body">
-      Это приложение-коробка с открытым исходным кодом.
-      <br><br>
-      Внутри — лисёнок Firefox (SVG).
-    </div>
-  </div>
+<div id="start-menu">
+    <div class="start-title">WebOS 7</div>
 
-  <!-- Модалка установки/удаления -->
-  <div id="install-modal">
-    <div class="modal-content">
-      <h3 id="modal-title">Установка приложения</h3>
-      <label>Название</label>
-      <input type="text" id="app-name" placeholder="Например: Box">
-      <label>Иконка (URL или base64)</label>
-      <input type="text" id="app-icon" placeholder="URL картинки">
-      <label>Действие при клике</label>
-      <select id="app-action">
-        <option value="alert">Показать сообщение</option>
-        <option value="open-window">Открыть окно</option>
-      </select>
-      <button onclick="installApp()" style="width:auto; padding:6px 12px;">Установить</button>
-      <button onclick="closeInstallModal()" style="margin-top:8px; width:auto;">Отмена</button>
-    </div>
-  </div>
+    <button class="start-item" id="open-explorer">
+        <span class="big-icon">📁</span>
+        <span>Проводник</span>
+    </button>
 
-  <script>
-    const desktop = document.getElementById('desktop');
-    const startBtn = document.getElementById('start-btn');
-    const startMenu = document.getElementById('start-menu');
-    const bgInput = document.getElementById('bg-input');
-    const installModal = document.getElementById('install-modal');
-    const appWindow = document.getElementById('app-window');
-    const runningAppsContainer = document.getElementById('running-apps');
+    <button class="start-item" id="create-file">
+        <span class="big-icon">📄</span>
+        <span>Создать HTML-файл</span>
+    </button>
 
-    // Переключение меню Пуск
-    startBtn.addEventListener('click', () => {
-      startMenu.classList.toggle('visible');
-    });
+    <button class="start-item" id="install-file">
+        <span class="big-icon">📦</span>
+        <span>Установить HTML-файл</span>
+    </button>
 
-    // Смена фона
-    bgInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        desktop.style.backgroundImage = `url('${ev.target.result}')`;
-      };
-      reader.readAsDataURL(file);
-    });
+    <button class="start-item" id="change-wallpaper">
+        <span class="big-icon">🖼️</span>
+        <span>Сменить обои</span>
+    </button>
 
-    // Иконки приложений на рабочем столе
-    const icons = [];
+    <button class="start-item" id="reset-wallpaper">
+        <span class="big-icon">🔄</span>
+        <span>Стандартные обои</span>
+    </button>
 
-    function createDesktopIcon(name, iconUrl, action) {
-      const el = document.createElement('div');
-      el.className = 'desktop-icon';
-      el.innerHTML = `
-        <img src="${iconUrl}" class="icon-img" alt="${name}">
-        <div class="icon-label">${name}</div>
-      `;
-      // Простое позиционирование: слева сверху, с отступом
-      let x = 20 + icons.length * 74;
-      let y = 20;
-      if (x > window.innerWidth - 80) {
-        x = 20;
-        y = 90 + icons.length * 74;
-      }
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      el.onclick = () => handleAppClick(name, action);
-      desktop.appendChild(el);
-      icons.push({ el, name, iconUrl, action });
+    <button class="start-item" id="delete-all">
+        <span class="big-icon">🗑️</span>
+        <span>Удалить все файлы</span>
+    </button>
+</div>
+
+<input
+    type="file"
+    id="html-input"
+    accept=".html,.htm,text/html"
+    hidden
+>
+
+<input
+    type="file"
+    id="wallpaper-input"
+    accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+    hidden
+>
+
+<div class="context-menu" id="context-menu">
+    <button id="context-open">Открыть</button>
+    <button id="context-edit">Изменить</button>
+    <button id="context-delete">Удалить</button>
+</div>
+
+<script>
+"use strict";
+
+/* -----------------------------
+   Хранилище
+----------------------------- */
+
+const FILES_KEY = "webos7_files";
+const WALLPAPER_KEY = "webos7_wallpaper";
+
+let files = JSON.parse(localStorage.getItem(FILES_KEY) || "[]");
+let selectedFileId = null;
+let windows = [];
+let windowNumber = 0;
+
+const desktop = document.getElementById("desktop");
+const startMenu = document.getElementById("start-menu");
+const startButton = document.getElementById("start-button");
+const taskButtons = document.getElementById("task-buttons");
+const htmlInput = document.getElementById("html-input");
+const wallpaperInput = document.getElementById("wallpaper-input");
+const contextMenu = document.getElementById("context-menu");
+
+const DEFAULT_WALLPAPER =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='700'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop stop-color='%2318c8f0'/%3E%3Cstop offset='.55' stop-color='%23056baf'/%3E%3Cstop offset='1' stop-color='%23002149'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E";
+
+function saveFiles() {
+    localStorage.setItem(FILES_KEY, JSON.stringify(files));
+}
+
+function generateId() {
+    return Date.now().toString(36) +
+        Math.random().toString(36).substring(2);
+}
+
+/* -----------------------------
+   Обои
+----------------------------- */
+
+function setWallpaper(imageData) {
+    document.body.style.backgroundImage =
+        `linear-gradient(rgba(0, 55, 120, .15), rgba(0, 0, 0, .2)), url("${imageData}")`;
+}
+
+function loadWallpaper() {
+    const wallpaper = localStorage.getItem(WALLPAPER_KEY);
+    setWallpaper(wallpaper || DEFAULT_WALLPAPER);
+}
+
+wallpaperInput.addEventListener("change", function(event) {
+    const image = event.target.files[0];
+
+    if (!image) return;
+
+    const allowedTypes = [
+        "image/png",
+        "image/jpeg"
+    ];
+
+    if (!allowedTypes.includes(image.type)) {
+        alert("Разрешены только изображения PNG и JPG.");
+        wallpaperInput.value = "";
+        return;
     }
 
-    // Обработчик клика по иконке
-    function handleAppClick(name, action) {
-      if (action === 'alert') {
-        alert(`Приложение "${name}" запущено!`);
-      } else if (action === 'open-window') {
-        document.getElementById('app-title').textContent = name;
-        appWindow.classList.add('visible');
-        // Добавляем лисёнка Firefox в окно, если это «Box»
-        if (name === 'Box') {
-          document.getElementById('app-body').innerHTML = `
-            <p>Приложение «Box» — открытый исходный код.</p>
-            <div style="text-align:center;">
-              ${getFirefoxFoxSVG()}
-            </div>
-          `;
-        } else {
-          document.getElementById('app-body').textContent = `Приложение "${name}".`;
+    const reader = new FileReader();
+
+    reader.onload = function() {
+        try {
+            localStorage.setItem(WALLPAPER_KEY, reader.result);
+            setWallpaper(reader.result);
+        } catch (error) {
+            alert(
+                "Не удалось сохранить обои. " +
+                "Выберите изображение меньшего размера."
+            );
         }
-      }
+    };
+
+    reader.readAsDataURL(image);
+    wallpaperInput.value = "";
+});
+
+document.getElementById("change-wallpaper").onclick = function() {
+    closeStartMenu();
+    wallpaperInput.click();
+};
+
+document.getElementById("reset-wallpaper").onclick = function() {
+    closeStartMenu();
+    localStorage.removeItem(WALLPAPER_KEY);
+    loadWallpaper();
+};
+
+/* -----------------------------
+   Рабочий стол
+----------------------------- */
+
+function renderDesktop() {
+    desktop.innerHTML = "";
+
+    const computerIcon = document.createElement("div");
+    computerIcon.className = "desktop-icon";
+    computerIcon.innerHTML = `
+        <span class="icon">💻</span>
+        <span class="name">Компьютер</span>
+    `;
+
+    computerIcon.ondblclick = openExplorer;
+    desktop.appendChild(computerIcon);
+
+    files.forEach(function(file) {
+        if (file.desktop === false) return;
+
+        const icon = document.createElement("div");
+        icon.className = "desktop-icon";
+        icon.dataset.id = file.id;
+
+        icon.innerHTML = `
+            <span class="icon">📄</span>
+            <span class="name"></span>
+        `;
+
+        icon.querySelector(".name").textContent = file.name;
+
+        icon.ondblclick = function() {
+            openFile(file.id);
+        };
+
+        icon.oncontextmenu = function(event) {
+            event.preventDefault();
+
+            selectedFileId = file.id;
+
+            contextMenu.style.display = "block";
+            contextMenu.style.left = event.pageX + "px";
+            contextMenu.style.top = event.pageY + "px";
+        };
+
+        desktop.appendChild(icon);
+    });
+}
+
+/* -----------------------------
+   Оконная система
+----------------------------- */
+
+function createWindow(title, content, options = {}) {
+    const windowElement = document.createElement("div");
+    const id = "window-" + (++windowNumber);
+
+    windowElement.className = "window";
+    windowElement.id = id;
+
+    windowElement.style.width = options.width || "720px";
+    windowElement.style.height = options.height || "480px";
+    windowElement.style.left = options.left || "150px";
+    windowElement.style.top = options.top || "75px";
+
+    windowElement.innerHTML = `
+        <div class="window-header">
+            <div class="window-title"></div>
+
+            <div class="window-controls">
+                <button class="minimize" title="Свернуть">−</button>
+                <button class="maximize" title="Развернуть">□</button>
+                <button class="close" title="Закрыть">×</button>
+            </div>
+        </div>
+
+        <div class="window-body"></div>
+    `;
+
+    windowElement.querySelector(".window-title").textContent = title;
+    windowElement.querySelector(".window-body").appendChild(content);
+
+    document.body.appendChild(windowElement);
+
+    const taskButton = document.createElement("button");
+    taskButton.className = "task-button";
+    taskButton.textContent = title;
+
+    taskButton.onclick = function() {
+        if (windowElement.style.display === "none") {
+            windowElement.style.display = "flex";
+        }
+
+        bringToFront(windowElement);
+    };
+
+    taskButtons.appendChild(taskButton);
+
+    const windowObject = {
+        element: windowElement,
+        taskButton: taskButton
+    };
+
+    windows.push(windowObject);
+
+    windowElement.querySelector(".close").onclick = function() {
+        windowElement.remove();
+        taskButton.remove();
+
+        windows = windows.filter(function(item) {
+            return item.element !== windowElement;
+        });
+    };
+
+    windowElement.querySelector(".minimize").onclick = function() {
+        windowElement.style.display = "none";
+    };
+
+    windowElement.querySelector(".maximize").onclick = function() {
+        windowElement.classList.toggle("maximized");
+    };
+
+    makeDraggable(windowElement);
+
+    windowElement.addEventListener("mousedown", function() {
+        bringToFront(windowElement);
+    });
+
+    bringToFront(windowElement);
+
+    return windowElement;
+}
+
+function bringToFront(windowElement) {
+    const maximumZ = Math.max(
+        20,
+        ...windows.map(function(item) {
+            return parseInt(
+                getComputedStyle(item.element).zIndex || 20
+            );
+        })
+    );
+
+    windowElement.style.zIndex = maximumZ + 1;
+
+    windows.forEach(function(item) {
+        item.taskButton.classList.toggle(
+            "active",
+            item.element === windowElement
+        );
+    });
+}
+
+function makeDraggable(windowElement) {
+    const header = windowElement.querySelector(".window-header");
+
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    header.addEventListener("mousedown", function(event) {
+        if (windowElement.classList.contains("maximized")) {
+            return;
+        }
+
+        isDragging = true;
+
+        const rectangle = windowElement.getBoundingClientRect();
+
+        offsetX = event.clientX - rectangle.left;
+        offsetY = event.clientY - rectangle.top;
+
+        bringToFront(windowElement);
+    });
+
+    document.addEventListener("mousemove", function(event) {
+        if (!isDragging) return;
+
+        const newLeft = event.clientX - offsetX;
+        const newTop = event.clientY - offsetY;
+
+        windowElement.style.left = Math.max(0, newLeft) + "px";
+        windowElement.style.top = Math.max(0, newTop) + "px";
+    });
+
+    document.addEventListener("mouseup", function() {
+        isDragging = false;
+    });
+}
+
+/* -----------------------------
+   Проводник
+----------------------------- */
+
+function openExplorer() {
+    const container = document.createElement("div");
+    container.style.height = "100%";
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "toolbar";
+
+    toolbar.innerHTML = `
+        <button id="explorer-install">📦 Установить</button>
+        <button id="explorer-create">📄 Создать</button>
+        <button id="explorer-delete">🗑️ Удалить выбранный</button>
+    `;
+
+    const list = document.createElement("div");
+    list.className = "file-list";
+
+    const status = document.createElement("div");
+    status.className = "statusbar";
+
+    container.appendChild(toolbar);
+    container.appendChild(list);
+    container.appendChild(status);
+
+    createWindow("Проводник", container, {
+        width: "720px",
+        height: "470px",
+        left: "120px",
+        top: "70px"
+    });
+
+    function updateList() {
+        list.innerHTML = "";
+
+        if (files.length === 0) {
+            list.innerHTML = `
+                <div class="empty">
+                    В виртуальной системе пока нет HTML-файлов
+                </div>
+            `;
+
+            status.textContent = "Файлов: 0";
+            return;
+        }
+
+        files.forEach(function(file) {
+            const row = document.createElement("div");
+            row.className = "file-row";
+
+            if (selectedFileId === file.id) {
+                row.classList.add("selected");
+            }
+
+            row.innerHTML = `
+                <div class="file-icon">📄</div>
+
+                <div class="file-info">
+                    <div class="file-name"></div>
+                    <div class="file-type">
+                        HTML5-приложение
+                    </div>
+                </div>
+
+                <div class="file-actions">
+                    <button class="open-button">Открыть</button>
+                    <button class="edit-button">Изменить</button>
+                    <button class="delete-button">Удалить</button>
+                </div>
+            `;
+
+            row.querySelector(".file-name").textContent = file.name;
+
+            row.onclick = function() {
+                selectedFileId = file.id;
+                updateList();
+            };
+
+            row.ondblclick = function() {
+                openFile(file.id);
+            };
+
+            row.querySelector(".open-button").onclick = function(event) {
+                event.stopPropagation();
+                openFile(file.id);
+            };
+
+            row.querySelector(".edit-button").onclick = function(event) {
+                event.stopPropagation();
+                editFile(file.id);
+            };
+
+            row.querySelector(".delete-button").onclick = function(event) {
+                event.stopPropagation();
+                deleteFile(file.id);
+                updateList();
+            };
+
+            list.appendChild(row);
+        });
+
+        status.textContent = "Файлов: " + files.length;
     }
 
-    // SVG лисёнка Firefox
-    function getFirefoxFoxSVG() {
-      return `
-        <svg width="120" height="120" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="100" fill="#FF9900"/>
+    toolbar.querySelector("#explorer-install").onclick = function() {
+        htmlInput.click();
+    };
+
+    toolbar.querySelector("#explorer-create").onclick = function() {
+        createNewFile();
+        updateList();
+    };
+
+    toolbar.querySelector("#explorer-delete").onclick = function() {
+        if (!selectedFileId) {
+            alert("Сначала выберите файл.");
+            return;
+        }
+
+        deleteFile(selectedFileId);
+        selectedFileId = null;
+        updateList();
+    };
+
+    updateList();
+}
+
+/* -----------------------------
+   Открытие HTML-файла
+----------------------------- */
+
+function openFile(id) {
+    const file = files.find(function(item) {
+        return item.id === id;
+    });
+
+    if (!file) return;
+
+    const iframe = document.createElement("iframe");
+    iframe.className = "preview";
+
+    /*
+       HTML-приложение запускается изолированно.
+       allow-scripts разрешает JavaScript внутри открытого файла.
+    */
+    iframe.setAttribute("sandbox", "allow-scripts");
+    iframe.srcdoc = file.content;
+
+    createWindow(file.name, iframe, {
+        width: "820px",
+        height: "570px",
+        left: "160px",
+        top: "55px"
+    });
+}
+
+/* -----------------------------
+   Редактор HTML-файлов
+----------------------------- */
+
+function editFile(id) {
+    const file = files.find(function(item) {
+        return item.id === id;
+    });
+
+    if (!file) return;
+
+    const container = document.createElement("div");
+    container.style.height = "100%";
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "editor-toolbar";
+
+    toolbar.innerHTML = `
+        <button id="save-editor">💾 Сохранить</button>
+        <button id="preview-editor">▶ Предпросмотр</button>
+    `;
+
+    const editor = document.createElement("textarea");
+    editor.className = "editor";
+    editor.spellcheck = false;
+    editor.value = file.content;
+
+    container.appendChild(toolbar);
+    container.appendChild(editor);
+
+    createWindow("Редактор: " + file.name, container, {
+        width: "820px",
+        height: "570px",
+        left: "130px",
+        top: "55px"
+    });
+
+    toolbar.querySelector("#save-editor").onclick = function() {
+        file.content = editor.value;
+        saveFiles();
+        alert("Файл сохранён.");
+    };
+
+    toolbar.querySelector("#preview-editor").onclick = function() {
+        file.content = editor.value;
+        saveFiles();
+        openFile(file.id);
+    };
+}
+
+/* -----------------------------
+   Создание HTML-файла
+----------------------------- */
+
+function createNewFile() {
+    const inputName = prompt(
+        "Введите имя HTML-файла:",
+        "Моё приложение.html"
+    );
+
+    if (!inputName) return;
+
+    const fileName = inputName.toLowerCase().endsWith(".html")
+        ? inputName
+        : inputName + ".html";
+
+    const content = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${fileName}</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 40px;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+button {
+    padding: 12px 25px;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<h1>Моё HTML5-приложение</h1>
+<p>Это приложение запущено внутри WebOS 7.</p>
+
+<button onclick="alert('Приложение работает!')">
+    Нажать
+</button>
+</body>
+</html>`;
+
+    files.push({
+        id: generateId(),
+        name: fileName,
+        content: content,
+        desktop: true
+    });
+
+    saveFiles();
+    renderDesktop();
+
+    editFile(files[files.length - 1].id);
+}
+
+/* -----------------------------
+   Установка HTML-файла
+----------------------------- */
+
+htmlInput.addEventListener("change", function(event) {
+    const selectedFile = event.target.files[0];
+
+    if (!selectedFile) return;
+
+    const fileName = selectedFile.name.toLowerCase();
+
+    if (!fileName.endsWith(".html") &&
+        !fileName.endsWith(".htm")) {
+        alert("Можно устанавливать только HTML-файлы.");
+        htmlInput.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function() {
+        files.push({
+            id: generateId(),
+            name: selectedFile.name,
+            content: reader.result,
+            desktop: true
+        });
+
+        saveFiles();
+        renderDesktop();
+
+        alert("Файл «" + selectedFile.name + "» установлен.");
+    };
+
+    reader.readAsText(selectedFile);
+    htmlInput.value = "";
+});
+
+/* -----------------------------
+   Удаление файлов
+----------------------------- */
+
+function deleteFile(id) {
+    const file = files.find(function(item) {
+        return item.id === id;
+    });
+
+    if (!file) return;
+
+    if (!confirm("Удалить файл «" + file.name + "»?")) {
+        return;
+    }
+
+    files = files.filter(function(item) {
+        return item.id !== id;
+    });
+
+    selectedFileId = null;
+    saveFiles();
+    renderDesktop();
+}
+
+/* -----------------------------
+   Меню Пуск
+----------------------------- */
+
+function closeStartMenu() {
+    startMenu.classList.remove("visible");
+}
+
+startButton.onclick = function(event) {
+    event.stopPropagation();
+    startMenu.classList.toggle("visible");
+};
+
+document.getElementById("open-explorer").onclick = function() {
+    closeStartMenu();
+    openExplorer();
+};
+
+document.getElementById("create-file").onclick = function() {
+    closeStartMenu();
+    createNewFile();
+};
+
+document.getElementById("install-file").onclick = function() {
+    closeStartMenu();
+    htmlInput.click();
+};
+
+document.getElementById("delete-all").onclick = function() {
+    closeStartMenu();
+
+    if (files.length === 0) {
+        alert("Файлов для удаления нет.");
+        return;
+    }
+
+    if (confirm("Удалить все виртуальные файлы?")) {
+        files = [];
+        selectedFileId = null;
+        saveFiles();
+        renderDesktop();
+    }
+};
+
+/* -----------------------------
+   Контекстное меню
+----------------------------- */
+
+document.getElementById("context-open").onclick = function() {
+    if (selectedFileId) {
+        openFile(selectedFileId);
+    }
+
+    contextMenu.style.display = "none";
+};
+
+document.getElementById("context-edit").onclick = function() {
+    if (selectedFileId) {
+        editFile(selectedFileId);
+    }
+
+    contextMenu.style.display = "none";
+};
+
+document.getElementById("context-delete").onclick = function() {
+    if (selectedFileId) {
+        deleteFile(selectedFileId);
+    }
+
+    contextMenu.style.display = "none";
+};
+
+document.addEventListener("click", function(event) {
+    if (!contextMenu.contains(event.target)) {
+        contextMenu.style.display = "none";
+    }
+
+    if (!startMenu.contains(event.target) &&
+        event.target !== startButton) {
+        closeStartMenu();
+    }
+});
+
+/* -----------------------------
+   Часы
+----------------------------- */
+
+function updateClock() {
+    const now = new Date();
+
+    document.getElementById("clock").textContent =
+        now.toLocaleTimeString("ru-RU", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+}
+
+setInterval(updateClock, 1000);
+
+/* -----------------------------
+   Запуск системы
+----------------------------- */
+
+loadWallpaper();
+renderDesktop();
+updateClock();
+</script>
+
+</body>
+</html>
