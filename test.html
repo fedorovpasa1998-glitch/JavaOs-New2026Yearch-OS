@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Поиск HTML-файлов</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px 15px;
+      font-family: Arial, sans-serif;
+      background: #f2f4f7;
+      color: #222;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 10px;
+      margin: 30px 0;
+    }
+
+    .search-form input {
+      flex: 1;
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid #bbb;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .search-form button {
+      padding: 14px 25px;
+      border: 0;
+      border-radius: 5px;
+      color: white;
+      background: #1769aa;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .search-form button:hover {
+      background: #0d4f80;
+    }
+
+    #status {
+      margin-bottom: 20px;
+      color: #666;
+    }
+
+    .result {
+      margin-bottom: 18px;
+      padding: 20px;
+      background: white;
+      border-radius: 7px;
+      box-shadow: 0 2px 7px #0001;
+    }
+
+    .result h2 {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .result h2 a {
+      color: #1769aa;
+      text-decoration: none;
+    }
+
+    .result h2 a:hover {
+      text-decoration: underline;
+    }
+
+    .file-name {
+      margin-bottom: 12px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    .snippet {
+      line-height: 1.5;
+    }
+
+    .empty {
+      padding: 20px;
+      background: white;
+      border-radius: 7px;
+    }
+
+    @media (max-width: 600px) {
+      .search-form {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+    <h1>Поиск по HTML-файлам</h1>
+
+    <form id="searchForm" class="search-form">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Введите поисковый запрос"
+        autocomplete="off"
+        required
+      >
+
+      <button type="submit">
+        Найти
+      </button>
+    </form>
+
+    <div id="status"></div>
+    <section id="results"></section>
+  </main>
+
+  <script>
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    const statusBlock = document.getElementById('status');
+    const resultsBlock = document.getElementById('results');
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function renderResults(data) {
+      if (!data.results || data.results.length === 0) {
+        resultsBlock.innerHTML = `
+          <div class="empty">
+            По вашему запросу ничего не найдено.
+          </div>
+        `;
+
+        return;
+      }
+
+      resultsBlock.innerHTML = data.results.map(item => {
+        const fileUrl = 'documents/' + item.file_path
+          .split('/')
+          .map(part => encodeURIComponent(part))
+          .join('/');
+
+        return `
+          <article class="result">
+            <h2>
+              <a href="${fileUrl}" target="_blank">
+                ${escapeHtml(item.title || item.file_name)}
+              </a>
+            </h2>
+
+            <div class="file-name">
+              Файл: ${escapeHtml(item.file_path)}
+            </div>
+
+            <div class="snippet">
+              ${escapeHtml(item.snippet)}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function search(query) {
+      statusBlock.textContent = 'Идёт поиск...';
+      resultsBlock.innerHTML = '';
+
+      try {
+        const response = await fetch(
+          'search.php?q=' + encodeURIComponent(query)
+        );
+
+        if (!response.ok) {
+          throw new Error('Ошибка HTTP: ' + response.status);
+        }
+
+        const data = await response.json();
+
+        statusBlock.textContent =
+          `Найдено результатов: ${data.count}`;
+
+        renderResults(data);
+
+      } catch (error) {
+        statusBlock.textContent = 'Произошла ошибка поиска';
+        resultsBlock.innerHTML = `
+          <div class="empty">
+            Не удалось получить данные с сервера.
+          </div>
+        `;
+
+        console.error(error);
+      }
+    }
+
+    searchForm.addEventListener('submit', event => {
+      event.preventDefault();
+
+      const query = searchInput.value.trim();
+
+      if (query.length < 2) {
+        statusBlock.textContent =
+          'Введите минимум 2 символа';
+
+        return;
+      }
+
+      search(query);
+    });
+  </script>
+
+</body>
+</html>
