@@ -1,0 +1,22 @@
+CREATE DATABASE html_search
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE html_search;
+
+CREATE TABLE documents (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    file_path VARCHAR(500) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    title VARCHAR(500) NOT NULL DEFAULT '',
+    content LONGTEXT NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY unique_file_path (file_path),
+
+    FULLTEXT KEY fulltext_search (title, content)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
